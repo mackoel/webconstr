@@ -6,9 +6,10 @@ require("optparse")
 genenames <- c("hb", "Kr", "gt", "kni")
 tfnames <- c("hb", "Kr", "gt", "kni", "constr", "bcd", "cad", "tll", "hkb")
 fulldbfile <- "sites_full_db.csv"
-outputann <- "annotated_sites.dat"
-dbfn <- "annotated_sites_model_db.csv"
+parmfilename <- "_con.024k.02.ini-deep-output"
+constrgdfile <- "dual_mRNA58_constr.gd"
 constrdbfile <- "constr_db.csv"
+term <- 'png'
 # -1 - don't check
 #  1 - accept if TRUE
 #  0 - accept if FALSE
@@ -30,12 +31,12 @@ constr_global_end <- -1
 constr_local_start <- -1
 constr_local_end <- -1
 constr_name <- "NA"
-parmfilename <- "_con.024k.02.ini-deep-output"
+outputdir <- "."
+outputann <- "annotated_sites.dat"
 constrparmfile <- "constr.par"
-constrgdfile <- "dual_mRNA58_constr.gd"
 constrgd <- "constr.gd"
 
-runmodel <- function(constrgd, constrparmfile, GG, cname, term = "png") {
+runmodel <- function(constrgd, constrparmfile, GG, cname, plotname, term = "png") {
 	# Colors
 	Ucolor="#000000"
 	Hcolor="#ff0000"
@@ -55,10 +56,9 @@ runmodel <- function(constrgd, constrparmfile, GG, cname, term = "png") {
 	options="-O hes -x input -X ddual -H -i 1.0 -s dde21d -a 1e-2 -g n -Z -j times -A ari "
 	rdatfile="gt2.dat"
 	pdatfile=paste0(constrgd, ".uof")
-	plotname=paste0(cname, ".", term)
 # Run model
 	command <- paste0("gcdm_printscore ", options, constrgd, " ", constrparmfile)
-	cat(command, "\n")
+#	cat(command, "\n")
 	system(command, intern = FALSE, ignore.stdout = FALSE, ignore.stderr = FALSE, wait = TRUE)
 # make plot
 	gplt=paste0(cname, ".gplt")
@@ -180,7 +180,7 @@ runmodel <- function(constrgd, constrparmfile, GG, cname, term = "png") {
 	cat(textgplt, file = gplt, sep = '\n')
 # Run gnuplot
 	command <- paste0("gnuplot ", gplt)
-	cat(command, "\n")
+#	cat(command, "\n")
 	system(command, intern = FALSE, ignore.stdout = FALSE, ignore.stderr = FALSE, wait = TRUE)
 }
 
@@ -191,7 +191,7 @@ mkgd <- function(afile, gfile, target, out) {
 	cat(text, file = out, sep = '\n')
 }
 
-mkann <- function(tab, dbfn) {
+mkann <- function(tab, dbfn = 'NA') {
 #	dim(tab[tab$target == "hb",])
 #	dim(tab[tab$target == "Kr",])
 #	dim(tab[tab$target == "gt",])
@@ -562,27 +562,39 @@ option_list <- list(
 	help = "pwm_high [default %default]"),
 	make_option(c("-t", "--constr_target"), type="character", default="NA",
 	help="constr_target [default %default]", metavar="string"),
+	make_option(c("", "--fulldbfile"), type="character", default=fulldbfile,
+	help="fulldbfile [default %default]", metavar="string"),
+	make_option(c("", "--constrdbfile"), type="character", default=constrdbfile,
+	help="constrdbfile [default %default]", metavar="string"),
+	make_option(c("", "--parmfilename"), type="character", default=parmfilename,
+	help="parmfilename [default %default]", metavar="string"),
+	make_option(c("", "--constrgdfile"), type="character", default=constrgdfile,
+	help="constrgdfile [default %default]", metavar="string"),
+	make_option(c("-o", "--outputdir"), type="character", default="NA",
+	help="outputdir [default %default]", metavar="string"),
 	make_option(c("-n", "--constr_name"), type="character", default="NA",
 	help="constr_target [default %default]", metavar="string")
 )
-opt_parser <- OptionParser(usage = "usage: %prog [options] fulldbfile constrdbfile dbfn outputann parmfilename", option_list = option_list, description = "checkconstr", epilogue = "Send feedback to mackoel@gmail.com")
+opt_parser <- OptionParser(usage = "usage: %prog [options] outputann constrparmfile constrgd", option_list = option_list, description = "checkconstr", epilogue = "Send feedback to mackoel@gmail.com")
 flaggs <- parse_args(opt_parser, args = commandArgs(trailingOnly = TRUE), print_help_and_exit = TRUE, positional_arguments = TRUE)
 opts <- flaggs$options
 args <- flaggs$args
-if (length(args) > 0) {
-	fulldbfile <- args[1]
-}
-if (length(args) > 1) {
-	constrdbfile <- args[2]
-}
-if (length(args) > 2) {
-	dbfn <- args[3]
-}
-if (length(args) > 3) {
-	outputann <- args[4]
-}
-if (length(args) > 4) {
-	parmfilename <- args[5]
+if (opts$outputdir == "NA") {
+	if (length(args) > 0) {
+		outputann <- args[1]
+	}
+	if (length(args) > 1) {
+		constrparmfile <- args[2]
+	}
+	if (length(args) > 2) {
+		constrgd <- args[3]
+	}
+} else {
+	outputdir <- opts$outputdir
+	if(!file.exists(outputdir)) dir.create(outputdir, rec=TRUE)
+	outputann <- paste0(outputdir, '/', outputann)
+	constrparmfile <- paste0(outputdir, '/', constrparmfile)
+	constrgd <- paste0(outputdir, '/', constrgd)
 }
 check_constr <- opts$check_constr
 check_dnase <- opts$check_dnase
@@ -598,6 +610,10 @@ constr_local_start <- opts$constr_local_start
 constr_local_end <- opts$constr_local_end
 constr_name <- opts$constr_name
 constr_target <- opts$constr_target
+fulldbfile <- opts$fulldbfile
+parmfilename <- opts$parmfilename
+constrgdfile <- opts$constrgdfile
+constrdbfile <- opts$constrdbfile
 # Read sites db
 ds <- getsitesdb(fulldbfile)
 #summary(ds)
@@ -607,7 +623,7 @@ ds <- getsitesdb(fulldbfile)
 #dim(ds[ds$target == "kni",])
 #summary(ds)
 dds <- applyfilters(ds)
-outann <- mkann(dds, dbfn)
+outann <- mkann(dds)
 cat(file = outputann, outann, sep = '\n')
 if (constr_name != "NA" && constr_target == "NA") {
 	constrdb <- read.csv(constrdbfile, header = T, stringsAsFactors = F)
@@ -616,7 +632,8 @@ if (constr_name != "NA" && constr_target == "NA") {
 	cat(file = constrparmfile, sep = '\n', mkparfile(parmfilename, constr$target))
 	cat(file = outputann, consi, append = T, sep = '\n')
 	mkgd(outputann, constrgdfile, constr$target, constrgd)
-	runmodel(constrgd, constrparmfile, constr$target, constr_name)
+	plotname = paste0(outputdir, '/', constr_name, ".", term)
+	runmodel(constrgd, constrparmfile, constr$target, constr_name, plotname)
 } else if (constr_target != "NA") {
 	if (constr_target == "hb") {
 		if (constr_local_start == -1) {
@@ -656,8 +673,9 @@ if (constr_name != "NA" && constr_target == "NA") {
 	cat(file = constrparmfile, sep = '\n', mkparfile(parmfilename, constr$target))
 	cat(file = outputann, consi, append = T, sep = '\n')
 	mkgd(outputann, constrgdfile, constr_target, constrgd)
-	runmodel(constrgd, constrparmfile, constr_target, constr_name)
+	plotname = paste0(outputdir, '/', constr_name, ".", term)
+	runmodel(constrgd, constrparmfile, constr_target, constr_name, plotname)
 } else {
 
 }
-
+cat(plotname, '\n')
