@@ -20,6 +20,7 @@ indent_mode=2
 [project]
 name=webconstr
 base_path=/storage2/kkozlov/Repos/webconstr
+description=
 
 [long line marker]
 long_line_behaviour=1
@@ -27,7 +28,7 @@ long_line_column=72
 
 [files]
 current_page=0
-FILE_NAME_0=12672;R;0;EUTF-8;1;1;1;%2Fstorage2%2Fkkozlov%2FRepos%2Fwebconstr%2Fwebconstr.R;0;4
+FILE_NAME_0=1490;R;0;EUTF-8;1;1;1;%2Fstorage2%2Fkkozlov%2FRepos%2Fwebconstr%2Fwebconstr.R;0;4
 
 [VTE]
 last_dir=/users/kkozlov
