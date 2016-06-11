@@ -55,7 +55,7 @@ runmodel <- function(constrgd, constrparmfile, GG, cname, plotname, term = "png"
 	# Options
 	options="-O hes -x input -X ddual -H -i 1.0 -s dde21d -a 1e-2 -g n -Z -j times -A ari "
 	rdatfile="gt2.dat"
-	pdatfile=paste0(constrgd, ".uof")
+	pdatfile=paste0(constrgd, ".uof.0")
 # Run model
 	command <- paste0("gcdm_printscore ", options, constrgd, " ", constrparmfile)
 #	cat(command, "\n")
@@ -512,6 +512,17 @@ applyfilters <- function(db) {
 		ddb <- ddb[ddb$codereg != T,]
 	}
 	ddb <- ddb[ddb$PWM.score > 0,]
+#	filterE <- function(gene, tab, Nsites) {
+#		dat <- data.frame(tab[tab$target == gene,])
+#		nr <- min(dim(dat)[1], Nsites)
+#		dat <- dat[order(-dat$energy),]
+#		dat <- dat[1:nr, ]
+#		return(dat)
+#	}
+#	if (check_energy) {
+#		stab <- do.call(rbind, lapply(genenames, FUN = filterE, tab = ddb, Nsites = thr_nsites))
+#		ddb <- stab
+#	}
 	return(ddb)
 }
 
